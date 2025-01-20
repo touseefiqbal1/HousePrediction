@@ -10,9 +10,7 @@ from sklearn.model_selection import train_test_split
 # Load preprocessed data
 @st.cache
 def load_data():
-    file_path = "zameen-updated.csv"  # Replace with your actual file path
-    data = pd.read_csv(file_path)
-    return data
+    return pd.read_csv("zameen-updated.csv")
 
 # Function to train the model
 @st.cache
