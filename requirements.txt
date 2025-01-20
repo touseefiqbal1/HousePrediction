@@ -4,6 +4,5 @@ numpy
 matplotlib
 seaborn
 scikit-learn
-streamlit==1.23.0
 xgboost
 lightgbm
