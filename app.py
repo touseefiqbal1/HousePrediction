@@ -7,13 +7,18 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 
-# Load preprocessed data
+# Load data with caching
 @st.cache
 def load_data():
-    return pd.read_csv("zameen-updated.csv")
+    try:
+        data = pd.read_csv("zameen-updated.csv")
+        return data
+    except FileNotFoundError:
+        st.error("Dataset not found. Please upload the dataset to the repository.")
+        return pd.DataFrame()
 
-# Function to train the model
-@st.cache
+# Function to train the model with caching
+@st.cache(allow_output_mutation=True)
 def train_model(data):
     features = ['property_type', 'bedrooms', 'baths', 'Area Size', 'latitude', 'longitude']
     X = data[features]
@@ -24,21 +29,23 @@ def train_model(data):
     model.fit(X_scaled, y)
     return model, scaler, features
 
-# Load data
+# Load and validate data
 data = load_data()
+if data.empty:
+    st.stop()
 
-# Train the model
+# Train model
 model, scaler, features = train_model(data)
 
-# Dashboard Title
+# Dashboard title
 st.title("Real Estate Price Prediction Dashboard")
 
-# Display Dataset Overview
+# Display dataset overview
 st.header("Dataset Overview")
 if st.checkbox("Show raw data"):
     st.write(data.head())
 
-# Sidebar for User Input
+# Sidebar for user input
 st.sidebar.header("User Input Features")
 property_type = st.sidebar.selectbox("Property Type", sorted(data['property_type'].unique()))
 bedrooms = st.sidebar.slider("Number of Bedrooms", 0, int(data['bedrooms'].max()), 3)
@@ -56,7 +63,7 @@ longitude = st.sidebar.slider("Longitude",
                                float(data['longitude'].max()), 
                                float(data['longitude'].mean()))
 
-# Price Prediction
+# Prediction
 st.header("Price Prediction")
 if st.button("Predict Price"):
     input_data = pd.DataFrame({
@@ -72,22 +79,22 @@ if st.button("Predict Price"):
     st.success(f"Predicted Price: {predicted_price:,.2f}")
 
 # Visualizations
-st.header("Visualizations")
+st.header("Data Visualizations")
 
-# Price Distribution
+# Price distribution
 st.subheader("Price Distribution")
 fig, ax = plt.subplots()
 sns.histplot(data['price'], kde=True, ax=ax, color="blue")
 st.pyplot(fig)
 
-# Geospatial Analysis
+# Geospatial analysis
 st.subheader("Geospatial Analysis")
 fig, ax = plt.subplots()
 sns.scatterplot(x=data['longitude'], y=data['latitude'], hue=data['price'], palette='coolwarm', ax=ax)
 plt.title("Property Prices by Location")
 st.pyplot(fig)
 
-# Feature Importance
+# Feature importance
 st.subheader("Feature Importance (Random Forest)")
 feature_importances = model.feature_importances_
 fig, ax = plt.subplots()
